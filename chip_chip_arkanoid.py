@@ -13,6 +13,7 @@ WIDTH, HEIGHT = screen_info.current_w, screen_info.current_h
 PADDLE_WIDTH, PADDLE_HEIGHT = 60, 10
 BALL_DIMENSION = 2
 PADDLE_SPEED = 10
+PADDLE_ACCELERATION = 0.5
 BALL_SPEED = 3
 BLOCK_WIDTH, BLOCK_HEIGHT = 3, 3
 
@@ -25,13 +26,30 @@ class Paddle:
         self.x = WIDTH // 2
         self.y = HEIGHT - PADDLE_HEIGHT - 10
         self.rect = pygame.Rect(int(self.x), self.y, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.velocity = 0
+        self.acceleration = (
+            PADDLE_ACCELERATION  # Adjust this value to control acceleration
+        )
 
-    def move(self, speed):
+    def move(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.x -= speed
-        if keys[pygame.K_RIGHT]:
-            self.x += speed
+            self.velocity -= self.acceleration
+        elif keys[pygame.K_RIGHT]:
+            self.velocity += self.acceleration
+        else:
+            # Apply friction or damping to gradually reduce velocity when no key is pressed
+            self.velocity *= 0.95
+
+        # Limit the velocity to prevent excessive movement
+        self.velocity = max(-PADDLE_SPEED, min(PADDLE_SPEED, self.velocity))
+
+        # Update position based on velocity
+        self.x += self.velocity
+
+        # Ensure paddle stays within screen boundaries
+        self.x = max(0, min(WIDTH - PADDLE_WIDTH, self.x))
+
         self.rect = pygame.Rect(int(self.x), self.y, PADDLE_WIDTH, PADDLE_HEIGHT)
 
 
@@ -79,7 +97,7 @@ while True:
             sys.exit()
 
     # Move paddle
-    paddle.move(PADDLE_SPEED)
+    paddle.move()
     if (
         pygame.key.get_pressed()[pygame.K_LEFT]
         or pygame.key.get_pressed()[pygame.K_RIGHT]
